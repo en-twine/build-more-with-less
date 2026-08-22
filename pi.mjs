@@ -7,6 +7,10 @@ import config from "./harness.config.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const browserEnabled = process.env.PI_BROWSER === undefined ? config.browser : process.env.PI_BROWSER === "1";
+const orchestrationEnabled = process.env.PI_ORCHESTRATION === undefined
+  ? config.orchestration
+  : process.env.PI_ORCHESTRATION === "1";
+const orchestrationMaxRequests = Number(config.orchestrationMaxRequests ?? 3);
 const compression = process.env.PI_HONEY_SKILL === "1" ? "skill" : config.compression;
 const honeySkillEnabled = compression === "skill";
 const baseUrl = process.env.HACKATHON_BASE_URL || config.baseUrl;
@@ -36,6 +40,10 @@ if (!Number.isInteger(Number(maxRequests)) || Number(maxRequests) < 0) {
 }
 if (!Number.isInteger(maxOutputTokens) || maxOutputTokens < 1) {
   console.error(`maxOutputTokens must be a positive integer: ${maxOutputTokens}`);
+  process.exit(2);
+}
+if (!Number.isInteger(orchestrationMaxRequests) || orchestrationMaxRequests < 1) {
+  console.error(`orchestrationMaxRequests must be a positive integer: ${orchestrationMaxRequests}`);
   process.exit(2);
 }
 try {
@@ -70,6 +78,10 @@ if (browserEnabled) {
   tools.push("browser");
   args.push("--extension", path.join(root, ".pi/extensions/browser.ts"));
 }
+if (orchestrationEnabled) {
+  tools.push("delegate");
+  args.push("--extension", path.join(root, ".pi/extensions/delegate.ts"));
+}
 if (verifyCommand) {
   args.push("--extension", path.join(root, ".pi/extensions/verify.ts"));
 }
@@ -84,6 +96,9 @@ const childEnv = {
   PI_RUNTIME_MAX_TOKENS: String(maxOutputTokens),
   PI_MAX_TURNS: String(maxRequests),
   PI_BROWSER: browserEnabled ? "1" : "0",
+  PI_ORCHESTRATION: orchestrationEnabled ? "1" : "0",
+  PI_ORCHESTRATION_MAX_REQUESTS: String(orchestrationMaxRequests),
+  PI_RUNTIME_HONEY_SKILL: honeySkillEnabled ? "1" : "0",
   PI_VERIFY_CMD: verifyCommand,
 };
 

@@ -12,6 +12,8 @@ export default {
   compression: "model",
 
   browser: false,        // true only when UI acceptance checks need browser-harness
+  orchestration: false,  // opt-in: allow one bounded Pi subagent per task
+  orchestrationMaxRequests: 3,
   compressToolOutput: true, // collapse only consecutive identical lines in long bash logs
   verifyCommand: "",    // e.g. "npm test"; runs locally after Pi stops
   maxRequests: 6,        // 0 disables the provider-request ceiling

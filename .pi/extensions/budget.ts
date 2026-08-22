@@ -27,6 +27,16 @@ export default function (pi: ExtensionAPI) {
     cost += usage.cost.total;
   });
 
+  pi.on("tool_result", (event) => {
+    if (!event.usage) return;
+    input += event.usage.input;
+    cache += event.usage.cacheRead;
+    output += event.usage.output;
+    cost += event.usage.cost.total;
+    const nestedRequests = Number((event.details as { requests?: unknown } | undefined)?.requests ?? 0);
+    if (Number.isInteger(nestedRequests) && nestedRequests > 0) turns += nestedRequests;
+  });
+
   pi.on("before_provider_request", (_event, ctx) => {
     if (limit > 0 && turns >= limit) {
       capped = true;
