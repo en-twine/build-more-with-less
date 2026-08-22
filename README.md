@@ -47,7 +47,7 @@ Pi refuses to start if the target is missing or is not a directory. Its file too
 
 ## Event configuration
 
-Edit only `harness.config.mjs`: application workspace, endpoint, model, API-key environment-variable name, compression mode, browser, verification command, and token/request ceilings are together there.
+Edit only `harness.config.mjs`: application workspace, endpoint, model, API-key environment-variable name, compression mode, browser, orchestration, verification command, and token/request ceilings are together there.
 
 Use `compression: "model"` when the event offers a Honey model. If it only offers an ordinary model, select that model and set `compression: "skill"` to load the vendored Honey Lean fallback. Use `"none"` only when intentionally running without compression.
 
@@ -59,6 +59,8 @@ Set `verifyCommand: "npm test"` once the blueprint's test command is known. Pi r
 
 Browser interaction requires `browser-harness` on `PATH`. Set `browser: true` only when an acceptance criterion needs it; disabled mode does not load its tool schema. `PI_BROWSER_HARNESS` remains available for a non-standard executable path.
 
-Environment variables (`PI_WORKSPACE`, `HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
+Orchestration is off by default because the single Pi loop completed the tested build without it. Set `orchestration: true` only when you explicitly want one additional scout, worker, or reviewer. The parent may delegate once per task; the child is sequential, isolated from the parent's conversation, capped by `orchestrationMaxRequests`, and its usage is included in the local receipt. There is no fan-out, background coordinator, shared server, or cmux/wmux dependency. cmux and wmux only display the parent Pi terminal.
+
+Environment variables (`PI_WORKSPACE`, `HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_ORCHESTRATION`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
 
 Before the event, delete `.setup/`. The retained competition harness is `.pi/`, `harness.config.mjs`, `pi.mjs`, and this file.
