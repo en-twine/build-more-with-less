@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import config from "./harness.config.mjs";
@@ -14,6 +15,7 @@ const apiKeyEnv = process.env.HACKATHON_API_KEY ? "HACKATHON_API_KEY" : config.a
 const verifyCommand = process.env.PI_VERIFY_CMD ?? config.verifyCommand;
 const maxRequests = process.env.PI_MAX_TURNS ?? config.maxRequests;
 const maxOutputTokens = Number(process.env.PI_MAX_OUTPUT_TOKENS ?? config.maxOutputTokens);
+const workspacePath = path.resolve(root, process.env.PI_WORKSPACE || config.workspacePath || ".");
 const compressedModel = /(?:^|-)(?:honey|ponytail|caveman)(?:-|$)/i.test(model);
 
 if (!["model", "skill", "none"].includes(compression)) {
@@ -34,6 +36,14 @@ if (!Number.isInteger(Number(maxRequests)) || Number(maxRequests) < 0) {
 }
 if (!Number.isInteger(maxOutputTokens) || maxOutputTokens < 1) {
   console.error(`maxOutputTokens must be a positive integer: ${maxOutputTokens}`);
+  process.exit(2);
+}
+try {
+  if (!statSync(workspacePath).isDirectory()) {
+    throw new Error("not a directory");
+  }
+} catch {
+  console.error(`Workspace path is not a directory: ${workspacePath}`);
   process.exit(2);
 }
 
@@ -77,8 +87,9 @@ const childEnv = {
   PI_VERIFY_CMD: verifyCommand,
 };
 
+console.log(`Workspace: ${workspacePath}`);
 const result = spawnSync(process.env.PI_BIN || "pi", args, {
-  cwd: process.cwd(),
+  cwd: workspacePath,
   env: childEnv,
   shell: process.platform === "win32",
   stdio: "inherit",

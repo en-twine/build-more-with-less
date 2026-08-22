@@ -22,9 +22,32 @@ node .\pi.mjs
 
 Do not put a real key in `harness.config.mjs` or commit an `.env` file. The default tool set is `read,write,edit,bash`.
 
+## Build in another repository
+
+Keep this harness separate from the application you build. Set `workspacePath` in `harness.config.mjs` to that application's directory:
+
+```js
+workspacePath: "../hackathon-app",
+```
+
+Relative paths start at this harness repository. Absolute paths also work. For a temporary target without editing the config:
+
+```sh
+PI_WORKSPACE=/absolute/path/to/hackathon-app node pi.mjs
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PI_WORKSPACE="C:\path\to\hackathon-app"
+node .\pi.mjs
+```
+
+Pi refuses to start if the target is missing or is not a directory. Its file tools, shell commands, browser workflow, and verification command then operate from the application repository; harness state remains here.
+
 ## Event configuration
 
-Edit only `harness.config.mjs`: endpoint, model, API-key environment-variable name, compression mode, browser, verification command, and token/request ceilings are together there.
+Edit only `harness.config.mjs`: application workspace, endpoint, model, API-key environment-variable name, compression mode, browser, verification command, and token/request ceilings are together there.
 
 Use `compression: "model"` when the event offers a Honey model. If it only offers an ordinary model, select that model and set `compression: "skill"` to load the vendored Honey Lean fallback. Use `"none"` only when intentionally running without compression.
 
@@ -36,6 +59,6 @@ Set `verifyCommand: "npm test"` once the blueprint's test command is known. Pi r
 
 Browser interaction requires `browser-harness` on `PATH`. Set `browser: true` only when an acceptance criterion needs it; disabled mode does not load its tool schema. `PI_BROWSER_HARNESS` remains available for a non-standard executable path.
 
-Environment variables (`HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
+Environment variables (`PI_WORKSPACE`, `HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
 
 Before the event, delete `.setup/`. The retained competition harness is `.pi/`, `harness.config.mjs`, `pi.mjs`, and this file.
