@@ -4,6 +4,9 @@ export default {
   model: "glm-5.2-honey",
   apiKeyEnv: "GREENPT_API_KEY",
 
+  // Application repository Pi may read and modify. Relative paths start here.
+  workspacePath: ".", // e.g. "../hackathon-app" or an absolute path
+
   // "model": selected model carries compression; "skill": load local Honey Lean;
   // "none": use neither. Never combine "skill" with Honey/Ponytail/Caveman IDs.
   compression: "model",
