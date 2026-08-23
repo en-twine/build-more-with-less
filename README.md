@@ -74,6 +74,8 @@ Treat the repository, blueprint, backlog, tests, and git diff as durable memory.
 5. Leave orchestration and browser access off for normal work. Enable one scout or worker only when stuck on a clearly bounded problem; use one reviewer before the demo only when independent checking is worth the extra requests. Prefer manual browser verification.
 6. Prefer `/new` over compaction. Use `/compact Preserve only unmet acceptance criteria, modified files, the current failing test, key decisions, and the next command. Drop completed work and discussion.` only when a single unfinished item cannot be restarted cheaply and several more AI requests are expected.
 
+For quick design direction, use [Refero Styles](https://styles.refero.design/?q=minimal) and choose one reference close to the intended interface. Do not paste a complete style guide into every prompt. Extract only the rules needed for the current slice—usually palette, typography, spacing, the key visual motif, and explicit do/don't constraints—and keep the full reference in the application repository when later tasks may need it. This preserves a coherent visual direction without repeatedly paying for irrelevant design context.
+
 The default guards allow six provider requests per user task and twelve across the complete session, including delegated subagents. The harness warns at 12,000 active context tokens and stops before another request at 20,000. A stop is local and deterministic: start `/new`; it does not trigger an automatic summarization request. Pi's own auto-compaction remains an emergency fallback but should not be reached during normal competition work.
 
 Before the event, delete `.setup/`. The retained competition harness is `.pi/`, `harness.config.mjs`, `pi.mjs`, and this file.
