@@ -34,6 +34,9 @@ const apiKeyEnv = process.env.HACKATHON_API_KEY ? "HACKATHON_API_KEY" : config.a
 const verifyCommand = process.env.PI_VERIFY_CMD ?? config.verifyCommand;
 const maxRequests = process.env.PI_MAX_TURNS ?? config.maxRequests;
 const maxSessionRequests = process.env.PI_MAX_SESSION_REQUESTS ?? config.maxSessionRequests;
+const reserveFinalRequest = process.env.PI_RESERVE_FINAL_REQUEST === undefined
+  ? config.reserveFinalRequest !== false
+  : process.env.PI_RESERVE_FINAL_REQUEST === "1";
 const contextWarnTokens = process.env.PI_CONTEXT_WARN_TOKENS ?? config.contextWarnTokens;
 const maxContextTokens = process.env.PI_MAX_CONTEXT_TOKENS ?? config.maxContextTokens;
 const maxBashOutputChars = process.env.PI_MAX_BASH_OUTPUT_CHARS ?? config.maxBashOutputChars;
@@ -133,6 +136,9 @@ const childEnv = {
   PI_RUNTIME_MAX_TOKENS: String(maxOutputTokens),
   PI_MAX_TURNS: String(maxRequests),
   PI_MAX_SESSION_REQUESTS: String(maxSessionRequests),
+  PI_RESERVE_FINAL_REQUEST: reserveFinalRequest ? "1" : "0",
+  PI_HANDOFF_FILE: path.join(root, ".pi-handoff.md"),
+  PI_HANDOFF_SENDER: `Pi coding agent (${model})`,
   PI_CONTEXT_WARN_TOKENS: String(contextWarnTokens),
   PI_MAX_CONTEXT_TOKENS: String(maxContextTokens),
   PI_MAX_BASH_OUTPUT_CHARS: String(maxBashOutputChars),

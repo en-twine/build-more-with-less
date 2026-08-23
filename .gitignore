@@ -1,5 +1,6 @@
 .env
 harness.config.mjs
+.pi-handoff.md
 .setup/
 .pi/agent/
 .DS_Store
