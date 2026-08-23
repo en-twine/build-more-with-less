@@ -18,8 +18,21 @@ export function compressRepeatedLines(text: string): { text: string; saved: numb
   return compressed.length < text.length ? { text: compressed, saved: text.length - compressed.length } : { text, saved: 0 };
 }
 
+export function capBashOutput(text: string, limit: number): { text: string; saved: number } {
+  if (text.length <= limit) return { text, saved: 0 };
+  const marker = "\n… ⟨middle of bash output removed locally⟩ …\n";
+  const available = limit - marker.length;
+  const head = Math.floor(available / 4);
+  const tail = available - head;
+  return {
+    text: text.slice(0, head) + marker + text.slice(-tail),
+    saved: text.length - limit,
+  };
+}
+
 export default function (pi: ExtensionAPI) {
   let saved = 0;
+  const maxChars = Number(process.env.PI_MAX_BASH_OUTPUT_CHARS ?? 8000);
 
   pi.on("input", (event) => {
     if (!event.streamingBehavior) saved = 0;
@@ -30,10 +43,11 @@ export default function (pi: ExtensionAPI) {
     let changed = false;
     const content = event.content.map((block) => {
       if (block.type !== "text") return block;
-      const result = compressRepeatedLines(block.text);
-      saved += result.saved;
-      changed ||= result.saved > 0;
-      return result.saved ? { ...block, text: result.text } : block;
+      const compressed = compressRepeatedLines(block.text);
+      const capped = capBashOutput(compressed.text, maxChars);
+      saved += compressed.saved + capped.saved;
+      changed ||= compressed.saved > 0 || capped.saved > 0;
+      return compressed.saved || capped.saved ? { ...block, text: capped.text } : block;
     });
     if (changed) return { content };
   });
