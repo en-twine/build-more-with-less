@@ -18,6 +18,10 @@ const model = process.env.HACKATHON_MODEL || config.model;
 const apiKeyEnv = process.env.HACKATHON_API_KEY ? "HACKATHON_API_KEY" : config.apiKeyEnv;
 const verifyCommand = process.env.PI_VERIFY_CMD ?? config.verifyCommand;
 const maxRequests = process.env.PI_MAX_TURNS ?? config.maxRequests;
+const maxSessionRequests = process.env.PI_MAX_SESSION_REQUESTS ?? config.maxSessionRequests;
+const contextWarnTokens = process.env.PI_CONTEXT_WARN_TOKENS ?? config.contextWarnTokens;
+const maxContextTokens = process.env.PI_MAX_CONTEXT_TOKENS ?? config.maxContextTokens;
+const maxBashOutputChars = process.env.PI_MAX_BASH_OUTPUT_CHARS ?? config.maxBashOutputChars;
 const maxOutputTokens = Number(process.env.PI_MAX_OUTPUT_TOKENS ?? config.maxOutputTokens);
 const workspacePath = path.resolve(root, process.env.PI_WORKSPACE || config.workspacePath || ".");
 const compressedModel = /(?:^|-)(?:honey|ponytail|caveman)(?:-|$)/i.test(model);
@@ -36,6 +40,24 @@ if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(apiKeyEnv)) {
 }
 if (!Number.isInteger(Number(maxRequests)) || Number(maxRequests) < 0) {
   console.error(`maxRequests must be a non-negative integer: ${maxRequests}`);
+  process.exit(2);
+}
+for (const [name, value] of [
+  ["maxSessionRequests", maxSessionRequests],
+  ["contextWarnTokens", contextWarnTokens],
+  ["maxContextTokens", maxContextTokens],
+]) {
+  if (!Number.isInteger(Number(value)) || Number(value) < 0) {
+    console.error(`${name} must be a non-negative integer: ${value}`);
+    process.exit(2);
+  }
+}
+if (!Number.isInteger(Number(maxBashOutputChars)) || Number(maxBashOutputChars) < 500) {
+  console.error(`maxBashOutputChars must be an integer of at least 500: ${maxBashOutputChars}`);
+  process.exit(2);
+}
+if (Number(maxContextTokens) > 0 && Number(contextWarnTokens) > Number(maxContextTokens)) {
+  console.error(`contextWarnTokens cannot exceed maxContextTokens`);
   process.exit(2);
 }
 if (!Number.isInteger(maxOutputTokens) || maxOutputTokens < 1) {
@@ -95,6 +117,10 @@ const childEnv = {
   PI_RUNTIME_API_KEY_ENV: apiKeyEnv,
   PI_RUNTIME_MAX_TOKENS: String(maxOutputTokens),
   PI_MAX_TURNS: String(maxRequests),
+  PI_MAX_SESSION_REQUESTS: String(maxSessionRequests),
+  PI_CONTEXT_WARN_TOKENS: String(contextWarnTokens),
+  PI_MAX_CONTEXT_TOKENS: String(maxContextTokens),
+  PI_MAX_BASH_OUTPUT_CHARS: String(maxBashOutputChars),
   PI_BROWSER: browserEnabled ? "1" : "0",
   PI_ORCHESTRATION: orchestrationEnabled ? "1" : "0",
   PI_ORCHESTRATION_MAX_REQUESTS: String(orchestrationMaxRequests),

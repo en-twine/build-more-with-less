@@ -10,3 +10,4 @@ description: Build a supplied application blueprint with the fewest AI requests,
 3. Build the smallest complete slice while preserving required validation, security, accessibility, and error handling.
 4. Never weaken supplied tests. Run the narrowest deterministic checks; use the browser only for behavior they cannot prove.
 5. Repair only observed failures, stop when green, and report status plus verification commands in at most three bullets.
+6. A green vertical slice ends the session; use `/new` before unrelated work.
