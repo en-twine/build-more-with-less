@@ -102,6 +102,23 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("before_agent_start", (_event, ctx) => prepareFinalRequest(ctx));
 
+  pi.registerCommand("pickup", {
+    description: "Continue the single private local handoff in one request",
+    handler: async (_args, ctx) => {
+      if (!ctx.isIdle()) {
+        ctx.ui.notify("Pi is busy; run /pickup when it is idle.", "warning");
+        return;
+      }
+      if (!existsSync(handoffFile)) {
+        ctx.ui.notify(`No local handoff found: ${handoffFile}`, "warning");
+        return;
+      }
+      const handoff = readFileSync(handoffFile, "utf8").trim();
+      ctx.ui.notify(`Loaded local handoff: ${handoffFile}`, "info");
+      pi.sendUserMessage(`Continue this local handoff in the current workspace. Execute only its remaining work, verify it, and finish without restating the handoff.\n\n${handoff}`);
+    },
+  });
+
   pi.registerTool({
     name: "save_handoff",
     label: "Save local handoff",
