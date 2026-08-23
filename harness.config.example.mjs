@@ -18,6 +18,7 @@ export default {
   verifyCommand: "",    // e.g. "npm test"; runs locally after Pi stops
   maxRequests: 6,        // per user task; 0 disables
   maxSessionRequests: 12, // whole conversation, including subagents; 0 disables
+  reserveFinalRequest: true, // one last request to finish or write the ignored local handoff
   contextWarnTokens: 12000, // local warning only; 0 disables
   maxContextTokens: 20000,  // stop before another request; 0 disables
   maxBashOutputChars: 8000, // keep the start and error-heavy tail
