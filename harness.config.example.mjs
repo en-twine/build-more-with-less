@@ -1,8 +1,8 @@
 export default {
   // Event API. Keep the secret itself out of this file.
-  baseUrl: "https://api.greenpt.ai/v1",
-  model: "glm-5.2-honey",
-  apiKeyEnv: "GREENPT_API_KEY",
+  baseUrl: "https://api.example.com/v1",
+  model: "replace-with-event-model",
+  apiKeyEnv: "HACKATHON_API_KEY",
 
   // Application repository Pi may read and modify. Relative paths start here.
   workspacePath: ".", // e.g. "../hackathon-app" or an absolute path

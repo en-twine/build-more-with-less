@@ -1,4 +1,5 @@
 .env
+harness.config.mjs
 .setup/
 .pi/agent/
 .DS_Store
