@@ -57,7 +57,9 @@ Pi refuses to combine the fallback with any Honey, Ponytail, or Caveman model ID
 
 The same config controls browser access, deterministic tool-output compression, the local verification command, per-task and per-session request ceilings, context thresholds, and maximum output sizes. Tool compression collapses three or more consecutive byte-identical lines and bounds long bash output while preserving its start and error-heavy tail; it never rewrites prompts, requirements, source code, paths, commands, or error text. Pi computes task and cumulative-session request/token/cost receipts locally from response metadata and only shows them in the terminal; they are never added to model context.
 
-Set `verifyCommand: "npm test"` once the blueprint's test command is known. Pi runs it locally after each task and shows only pass/fail in the terminal; it adds no model request or context.
+`verifyCommand` runs an existing test command; it does not create tests. If the blueprint or scaffold supplies tests, use its command, such as `verifyCommand: "npm test"`. Otherwise, ask Pi to add the smallest deterministic test that proves the current acceptance criteria in the same slice. A dependency-free JavaScript application can use Node's built-in runner with `verifyCommand: "node --test"`; use the framework's existing test command when one is available. Keep visual styling checks in the browser instead of creating fragile pixel tests.
+
+Pi runs the command locally after each task and shows only pass/fail in the terminal, adding no model request or context. A concise implementation prompt is: `Build the feature and add the smallest dependency-free test covering the acceptance criteria. Run node --test and stop when green.`
 
 Browser interaction requires `browser-harness` on `PATH`. Set `browser: true` only when an acceptance criterion needs it; disabled mode does not load its tool schema. `PI_BROWSER_HARNESS` remains available for a non-standard executable path.
 
