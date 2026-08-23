@@ -95,7 +95,8 @@ try {
   process.exit(2);
 }
 
-const tools = ["read", "write", "edit", "bash"];
+// save_handoff is registered but locally hidden until the reserved final request.
+const tools = ["read", "write", "edit", "bash", "save_handoff"];
 const args = [
   "--provider", "hackathon",
   "--model", model,
