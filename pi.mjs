@@ -5,6 +5,16 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(root, ".env");
+if (existsSync(envPath)) {
+  if (typeof process.loadEnvFile !== "function") {
+    console.error("Automatic .env loading requires a current Node.js version. Update Node.js or export the API key before starting Pi.");
+    process.exit(2);
+  }
+  const exportedEnv = { ...process.env };
+  process.loadEnvFile(envPath);
+  Object.assign(process.env, exportedEnv);
+}
 const configPath = path.join(root, "harness.config.mjs");
 if (!existsSync(configPath)) {
   console.error("Missing local harness.config.mjs. Copy harness.config.example.mjs and set the event values.");

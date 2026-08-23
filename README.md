@@ -4,12 +4,13 @@ Minimal local Pi harness for the Sustainable AI Hackathon. It uses no project de
 
 ## Setup
 
-Create your ignored local configuration, then install the tested Pi version and set the API key named there:
+Create your ignored local configuration and `.env`, then install the tested Pi version:
 
 ```sh
 cp harness.config.example.mjs harness.config.mjs
+cp .env.example .env
+# Add the event API key to .env.
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
-export HACKATHON_API_KEY="your-key"
 node pi.mjs
 ```
 
@@ -17,12 +18,13 @@ Windows PowerShell:
 
 ```powershell
 Copy-Item .\harness.config.example.mjs .\harness.config.mjs
+Copy-Item .\.env.example .\.env
+# Add the event API key to .env.
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
-$env:HACKATHON_API_KEY="your-key"
 node .\pi.mjs
 ```
 
-`harness.config.mjs` is ignored so every user keeps their endpoint, model, workspace, and switches locally. Commit only changes to `harness.config.example.mjs`, and never put a real key in either file or commit an `.env` file. The default tool set is `read,write,edit,bash`.
+`apiKeyEnv` in `harness.config.mjs` is the environment-variable name, never the key itself. On every launch, `node pi.mjs` automatically loads the ignored `.env`; a value explicitly exported in the terminal takes precedence. The harness config is also ignored so every user keeps their endpoint, model, workspace, and switches locally. Commit only changes to `harness.config.example.mjs`, and never put a real key in either config file or commit `.env`. The default tool set is `read,write,edit,bash`.
 
 ## Build in another repository
 
