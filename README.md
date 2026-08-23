@@ -4,23 +4,25 @@ Minimal local Pi harness for the Sustainable AI Hackathon. It uses no project de
 
 ## Setup
 
-Install the tested Pi version and set the API key named in `harness.config.mjs`:
+Create your ignored local configuration, then install the tested Pi version and set the API key named there:
 
 ```sh
+cp harness.config.example.mjs harness.config.mjs
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
-export GREENPT_API_KEY="your-key"
+export HACKATHON_API_KEY="your-key"
 node pi.mjs
 ```
 
 Windows PowerShell:
 
 ```powershell
+Copy-Item .\harness.config.example.mjs .\harness.config.mjs
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
-$env:GREENPT_API_KEY="your-key"
+$env:HACKATHON_API_KEY="your-key"
 node .\pi.mjs
 ```
 
-Do not put a real key in `harness.config.mjs` or commit an `.env` file. The default tool set is `read,write,edit,bash`.
+`harness.config.mjs` is ignored so every user keeps their endpoint, model, workspace, and switches locally. Commit only changes to `harness.config.example.mjs`, and never put a real key in either file or commit an `.env` file. The default tool set is `read,write,edit,bash`.
 
 ## Build in another repository
 
@@ -78,4 +80,4 @@ For quick design direction, use [Refero Styles](https://styles.refero.design/?q=
 
 The default guards allow six provider requests per user task and twelve across the complete session, including delegated subagents. The harness warns at 12,000 active context tokens and stops before another request at 20,000. A stop is local and deterministic: start `/new`; it does not trigger an automatic summarization request. Pi's own auto-compaction remains an emergency fallback but should not be reached during normal competition work.
 
-Before the event, delete `.setup/`. The retained competition harness is `.pi/`, `harness.config.mjs`, `pi.mjs`, and this file.
+Before the event, delete `.setup/`. The retained competition harness is `.pi/`, the local `harness.config.mjs`, its tracked template, `pi.mjs`, and this file.

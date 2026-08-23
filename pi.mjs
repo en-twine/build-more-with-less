@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { existsSync, statSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
-import config from "./harness.config.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const configPath = path.join(root, "harness.config.mjs");
+if (!existsSync(configPath)) {
+  console.error("Missing local harness.config.mjs. Copy harness.config.example.mjs and set the event values.");
+  process.exit(2);
+}
+const { default: config } = await import(pathToFileURL(configPath));
 const browserEnabled = process.env.PI_BROWSER === undefined ? config.browser : process.env.PI_BROWSER === "1";
 const orchestrationEnabled = process.env.PI_ORCHESTRATION === undefined
   ? config.orchestration
