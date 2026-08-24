@@ -1,11 +1,11 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const taskLimit = Number(process.env.PI_MAX_TURNS ?? 6);
-const sessionLimit = Number(process.env.PI_MAX_SESSION_REQUESTS ?? 12);
-const reserveFinalRequest = process.env.PI_RESERVE_FINAL_REQUEST !== "0";
+const taskLimit = Number(process.env.PI_MAX_TURNS ?? 0);
+const sessionLimit = Number(process.env.PI_MAX_SESSION_REQUESTS ?? 0);
+const reserveFinalRequest = process.env.PI_RESERVE_FINAL_REQUEST === "1";
 const contextWarnTokens = Number(process.env.PI_CONTEXT_WARN_TOKENS ?? 12000);
-const contextLimitTokens = Number(process.env.PI_MAX_CONTEXT_TOKENS ?? 20000);
+const contextLimitTokens = Number(process.env.PI_MAX_CONTEXT_TOKENS ?? 0);
 const handoffFile = process.env.PI_HANDOFF_FILE ?? ".pi-handoff.md";
 const handoffSender = process.env.PI_HANDOFF_SENDER ?? "Pi coding agent";
 const handoffParameters = {
@@ -53,9 +53,7 @@ export default function (pi: ExtensionAPI) {
     finalRequestPrepared = true;
     handoffBefore = existsSync(handoffFile) ? readFileSync(handoffFile, "utf8") : undefined;
     const created = new Date().toISOString();
-    finalInstruction = truncatedResponse
-      ? `RECOVERY HANDOFF (${reason}, prepared ${created}). The previous response was truncated and its incomplete tool call did not run. Do not retry it or continue implementation. Call save_handoff exactly once with a self-contained status of at most 250 words, including the rejected change, completed files, remaining work, verification, and one exact next step that splits the work into a smaller bounded edit. Never recommend reissuing the same oversized payload. Never include secrets or full logs.`
-      : `FINALIZATION REQUEST (${reason}, prepared ${created}). This is the only extra provider request and no provider continuation will run after it. Application tools are now unavailable: do not start or continue implementation. If every explicit acceptance criterion was already satisfied before this request, give the normal concise completion answer and do not create a handoff. Otherwise call save_handoff exactly once with a self-contained status of at most 250 words. Never include secrets or full logs.`;
+    finalInstruction = `FINALIZATION REQUEST (${reason}, prepared ${created}). This is the only extra provider request and no provider continuation will run after it. Application tools are now unavailable: do not start or continue implementation. If every explicit acceptance criterion was already satisfied before this request, give the normal concise completion answer and do not create a handoff. Otherwise call save_handoff exactly once with a self-contained status of at most 250 words. Never include secrets or full logs.`;
   };
 
   const requestCapReason = () => {
@@ -113,7 +111,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "save_handoff",
     label: "Save local handoff",
-    description: "Overwrite the private local handoff when the user asks, the task is blocked, or the request budget is nearly exhausted. Include concise durable state, never secrets or full logs, then stop.",
+    description: "Use only when the user explicitly requests a handoff. Overwrite the private local handoff with concise durable state, never secrets or full logs, then stop.",
     parameters: handoffParameters as any,
     async execute(_id, params, _signal, _onUpdate, ctx) {
       const document = [
@@ -155,7 +153,7 @@ export default function (pi: ExtensionAPI) {
     session.requests += 1;
     addUsage(task, usage);
     addUsage(session, usage);
-    prepareFinalRequest(ctx, truncatedResponse ? "output token limit after truncated response" : undefined);
+    prepareFinalRequest(ctx);
   });
 
   pi.on("tool_result", (event) => {
@@ -174,18 +172,11 @@ export default function (pi: ExtensionAPI) {
     const requestReason = requestCapReason();
     if (contextLimitTokens > 0 && contextTokens >= contextLimitTokens) {
       cappedReason = `context cap (${contextTokens}/${contextLimitTokens} tokens)`;
-    } else if (truncatedResponse && !finalRequestPrepared) {
-      cappedReason = "output truncated; recovery handoff disabled or unavailable";
-    } else if (finalRequestPrepared && !finalRequestStarted && (truncatedResponse || requestReason)) {
+    } else if (truncatedResponse) {
+      cappedReason = "automatic retry stopped after output truncation";
+    } else if (requestReason && finalRequestPrepared && !finalRequestStarted) {
       finalRequestStarted = true;
-      if (ctx.hasUI) {
-        ctx.ui.notify(
-          truncatedResponse
-            ? "Output truncated; replacing automatic retry with one local handoff request."
-            : "Final request: finish now or write the local handoff.",
-          "warning",
-        );
-      }
+      if (ctx.hasUI) ctx.ui.notify("Final request: finish now or write the local handoff.", "warning");
       const payload = event.payload as { messages?: unknown[]; [key: string]: unknown };
       if (!Array.isArray(payload.messages)) {
         cappedReason = "unsupported provider payload for final handoff";
@@ -204,13 +195,16 @@ export default function (pi: ExtensionAPI) {
           tool_choice: "auto",
         };
       }
-    } else if (truncatedResponse && finalRequestStarted) {
-      cappedReason = "automatic retry stopped after output truncation";
     } else if (requestReason) {
       cappedReason = requestReason;
     }
     if (cappedReason) {
-      if (ctx.hasUI) ctx.ui.notify(`Stopped before another AI request: ${cappedReason}. Use /new to continue.`, "warning");
+      if (ctx.hasUI) {
+        const recovery = truncatedResponse
+          ? "Send a smaller bounded instruction to continue."
+          : "Use /new to continue.";
+        ctx.ui.notify(`Stopped before another AI request: ${cappedReason}. ${recovery}`, "warning");
+      }
       ctx.abort();
       return;
     }
