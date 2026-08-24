@@ -95,7 +95,7 @@ try {
   process.exit(2);
 }
 
-// Keep the small local handoff tool available for explicit or early handoffs.
+// Keep the small local handoff tool available only for explicit handoffs.
 const tools = ["read", "write", "edit", "bash", "save_handoff"];
 const args = [
   "--provider", "hackathon",

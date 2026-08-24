@@ -5,10 +5,10 @@ description: Build a supplied application blueprint with the fewest AI requests,
 
 # Build More With Less
 
-1. Read the blueprint and supplied tests once; track criteria without restating them.
-2. Use supplied paths and bounded, batched reads; do not rediscover unchanged context.
-3. Build one smallest complete slice while preserving required validation, security, accessibility, and error handling. Split large artifacts by file or bounded edit before a tool call.
-4. Never weaken supplied tests. Run the narrowest deterministic checks; use the browser only for behavior they cannot prove.
-5. Repair only observed failures. Keep answers and tool arguments compact, omit progress narration, stop when green, and report status plus verification commands in at most three bullets.
-6. A green vertical slice ends the session; use `/new` before unrelated work.
-7. If blocked, near the request budget, or a response is length-truncated, never retry the payload. Call `save_handoff` once and stop.
+1. Work only on the current requested outcome. Read its blueprint, supplied tests, and relevant paths once without restating or rediscovering them.
+2. Make the smallest verifiable change that preserves required validation, security, accessibility, and error handling. Split large artifacts by file or bounded edit.
+3. Do not add dependencies, refactor unrelated code, research broadly, or implement speculative features unless an acceptance criterion requires it.
+4. Never weaken supplied tests. After meaningful changes, run the narrowest deterministic check; use the browser only for behavior it cannot prove.
+5. Repair observed failures only. Never repeat the same failed approach more than twice; then stop and report the observed blocker.
+6. Stop immediately when the acceptance criteria pass. A green vertical slice ends the session; use `/new` before unrelated work.
+7. Keep user-facing responses to at most three short bullets and omit progress narration. Call `save_handoff` only when the user explicitly requests it.
