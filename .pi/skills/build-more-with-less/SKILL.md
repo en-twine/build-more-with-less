@@ -11,3 +11,4 @@ description: Build a supplied application blueprint with the fewest AI requests,
 4. Never weaken supplied tests. Run the narrowest deterministic checks; use the browser only for behavior they cannot prove.
 5. Repair only observed failures, stop when green, and report status plus verification commands in at most three bullets.
 6. A green vertical slice ends the session; use `/new` before unrelated work.
+7. If blocked or the remaining work will not fit the request budget, call `save_handoff` once and stop before the hard cap.
