@@ -16,11 +16,11 @@ export default {
   orchestrationMaxRequests: 3,
   compressToolOutput: true, // collapse repeats and bound bash output before it reaches context
   verifyCommand: "",    // e.g. "npm test"; runs locally after Pi stops
-  maxRequests: 6,        // per user task; 0 disables
+  maxRequests: 10,       // per user task; plus one reserved final/handoff request
   maxSessionRequests: 12, // whole conversation, including subagents; 0 disables
   reserveFinalRequest: true, // one last request to finish or write the ignored local handoff
   contextWarnTokens: 12000, // local warning only; 0 disables
   maxContextTokens: 20000,  // stop before another request; 0 disables
   maxBashOutputChars: 8000, // keep the start and error-heavy tail
-  maxOutputTokens: 1200, // raise if a response ends with stopReason "length"
+  maxOutputTokens: 4000, // room for bounded code edits; a length stop forces handoff, never retry
 };
