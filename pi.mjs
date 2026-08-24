@@ -95,7 +95,7 @@ try {
   process.exit(2);
 }
 
-// save_handoff is registered but locally hidden until the reserved final request.
+// Keep the small local handoff tool available for explicit or early handoffs.
 const tools = ["read", "write", "edit", "bash", "save_handoff"];
 const args = [
   "--provider", "hackathon",

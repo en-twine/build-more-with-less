@@ -42,14 +42,7 @@ export default function (pi: ExtensionAPI) {
   let finalRequestPrepared = false;
   let finalRequestStarted = false;
   let handoffBefore: string | undefined;
-  let toolsBeforeFinal: string[] | undefined;
   let finalInstruction = "";
-
-  const restoreTools = () => {
-    if (!toolsBeforeFinal) return;
-    pi.setActiveTools(toolsBeforeFinal);
-    toolsBeforeFinal = undefined;
-  };
 
   const prepareFinalRequest = (ctx: ExtensionContext) => {
     const reason = requestCapReason();
@@ -70,10 +63,6 @@ export default function (pi: ExtensionAPI) {
   };
 
   pi.on("session_start", (_event, ctx) => {
-    const activeTools = pi.getActiveTools();
-    if (activeTools.includes("save_handoff")) {
-      pi.setActiveTools(activeTools.filter((name) => name !== "save_handoff"));
-    }
     for (const entry of ctx.sessionManager.getBranch()) {
       if (entry.type === "message" && entry.message.role === "assistant" && entry.message.usage.totalTokens) {
         session.requests += 1;
@@ -91,7 +80,6 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("input", (event) => {
     if (event.streamingBehavior) return;
-    restoreTools();
     task = emptyMeter();
     cappedReason = "";
     finalRequestPrepared = false;
@@ -122,7 +110,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "save_handoff",
     label: "Save local handoff",
-    description: "Overwrite the single private local handoff for an unfinished capped task. Include only concise durable state; never include secrets or full logs.",
+    description: "Overwrite the private local handoff when the user asks, the task is blocked, or the request budget is nearly exhausted. Include concise durable state, never secrets or full logs, then stop.",
     parameters: handoffParameters as any,
     async execute(_id, params, _signal, _onUpdate, ctx) {
       const document = [
@@ -182,8 +170,6 @@ export default function (pi: ExtensionAPI) {
       cappedReason = `context cap (${contextTokens}/${contextLimitTokens} tokens)`;
     } else if (requestReason && finalRequestPrepared && !finalRequestStarted) {
       finalRequestStarted = true;
-      toolsBeforeFinal = pi.getActiveTools();
-      pi.setActiveTools(["save_handoff"]);
       if (ctx.hasUI) ctx.ui.notify(`Final request: finish now or write the local handoff.`, "warning");
       const payload = event.payload as { messages?: unknown[]; [key: string]: unknown };
       if (!Array.isArray(payload.messages)) {
@@ -234,6 +220,5 @@ export default function (pi: ExtensionAPI) {
       `Task ${task.requests}${taskLimit ? `/${taskLimit}${finalRequestStarted ? "+1 final" : ""}` : ""} req · ${task.input} input + ${task.cache} cached + ${task.output} output · ${taskCost} | Session ${session.requests}${sessionLimit ? `/${sessionLimit}${finalRequestStarted ? "+1 final" : ""}` : ""} req · ${sessionCost} · ctx ${contextTokens}`,
       cappedReason ? "warning" : "info",
     );
-    restoreTools();
   });
 }
