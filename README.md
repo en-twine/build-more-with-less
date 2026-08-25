@@ -9,7 +9,7 @@ Create your ignored local configuration and `.env`, then install the tested Pi v
 ```sh
 cp harness.config.example.mjs harness.config.mjs
 cp .env.example .env
-# Add the event API key to .env.
+# Add both event API keys to .env.
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
 node pi.mjs
 ```
@@ -19,12 +19,12 @@ Windows PowerShell:
 ```powershell
 Copy-Item .\harness.config.example.mjs .\harness.config.mjs
 Copy-Item .\.env.example .\.env
-# Add the event API key to .env.
+# Add both event API keys to .env.
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.81.1
 node .\pi.mjs
 ```
 
-`apiKeyEnv` in `harness.config.mjs` is the environment-variable name, never the key itself. On every launch, `node pi.mjs` automatically loads the ignored `.env`; a value explicitly exported in the terminal takes precedence. The harness config is also ignored so every user keeps their endpoint, model, workspace, and switches locally. Commit only changes to `harness.config.example.mjs`, and never put a real key in either config file or commit `.env`. The default tool set is `read,write,edit,bash`.
+The ignored `.env` holds `HACKATHON_API_KEY_1` and `HACKATHON_API_KEY_2`; `keySlot` in `harness.config.mjs` selects one without exposing either value. On every launch, `node pi.mjs` automatically loads `.env`; a `HACKATHON_API_KEY` explicitly exported in the terminal is a temporary override. The harness config is also ignored so every user keeps their workspace and run switches locally. Commit only changes to `harness.config.example.mjs`, and never put a real key in either config file or commit `.env`. The default tool set is `read,write,edit,bash`.
 
 ## Build in another repository
 
@@ -51,11 +51,26 @@ Pi refuses to start if the target is missing or is not a directory. Its file too
 
 ## Event configuration
 
-Edit only `harness.config.mjs`: application workspace, endpoint, model, API-key environment-variable name, compression mode, browser, orchestration, verification command, and optional safety thresholds are together there.
+Edit only `harness.config.mjs`. Set `teamNumber` once, increment `runId` for each measured or test run, choose API key `keySlot` 1 or 2, and select `modelProfile`:
+
+- `deepseek-honey` uses `yoink@openailike/deepseek-v4-flash-0731` plus the vendored Honey Lean skill. This is the recommended first run: event pricing is $0.14/M input and $0.35/M output.
+- `glm-caveman` uses the supplied `yoink@openailike/glm-5.2-caveman` compression model without Honey. Use it for a second run if DeepSeek leaves a material quality gap; it costs $1.10/M input and $4.40/M output.
+
+The harness sends `X-ORQ-IDENTITY-ID: team-X-run-Y` on every provider request and refuses the placeholder `team-X`. The endpoint is fixed to `https://my.orq.ai/v3/router`. `HACKATHON_IDENTITY_ID`, `HACKATHON_MODEL`, and an explicitly exported `HACKATHON_API_KEY` remain temporary overrides.
 
 Use `compression: "model"` when the event offers a Honey model. If it only offers an ordinary model, select that model and set `compression: "skill"` to load the vendored Honey Lean fallback. Use `"none"` only when intentionally running without compression.
 
-Pi refuses to combine the fallback with any Honey, Ponytail, or Caveman model ID, preventing duplicate compression prompts. The fallback is GreenPT's official [Honey Lean](https://github.com/Green-PT/honey-for-devs/blob/c4e6839cc5217486c3d8fabbcda8bc5443ecb6b0/bench/variants/honey-lean.md) ruleset under the MIT license; it remains unloaded and costs no prompt tokens unless enabled.
+Pi refuses to combine the fallback with any Honey, Ponytail, or Caveman model ID, preventing duplicate compression prompts. The fallback is GreenPT's official [Honey Lean](https://github.com/Green-PT/honey-for-devs/blob/c4e6839cc5217486c3d8fabbcda8bc5443ecb6b0/bench/variants/honey-lean.md) ruleset under the MIT license; it is loaded for the DeepSeek profile and remains unloaded for Caveman. No locally recreated Ponytail or Caveman prompt is needed.
+
+The tiny LCA challenge skill is always loaded. It records only non-obvious invariants from the supplied files, especially that normalized totals are multiplied by `functional_unit_scaling_factor`; the brief's divide sentence conflicts with both JSON notes and the official demo results.
+
+For every scored or comparison run:
+
+1. Create a fresh empty application folder and point `workspacePath` to it; do not reuse a previous generated application.
+2. Keep the supplied brief and both JSON fixtures outside that folder and reference their paths in the first prompt.
+3. Increment `runId`, choose `keySlot`, and start with `modelProfile: "deepseek-honey"`.
+4. Keep orchestration off. Enable the browser only for final behavior that deterministic tests cannot prove.
+5. Start Pi and give one outcome-oriented prompt with the brief/data paths and required test command; let the injected skills carry the repeated constraints.
 
 The same config controls browser access, deterministic tool-output compression, the local verification command, optional request/context ceilings, and maximum output sizes. Normal parent work has no request or hard-context cap; bounded subagents retain their separate limit. Tool compression collapses three or more consecutive byte-identical lines and bounds long bash output while preserving its start and error-heavy tail; it never rewrites prompts, requirements, source code, paths, commands, or error text. Pi computes task and cumulative-session request/token/cost receipts locally from response metadata and only shows them in the terminal; they are never added to model context.
 
@@ -65,9 +80,9 @@ Pi runs the command locally after each task and shows only pass/fail in the term
 
 Browser interaction requires `browser-harness` on `PATH`. Set `browser: true` only when an acceptance criterion needs it; disabled mode does not load its tool schema. `PI_BROWSER_HARNESS` remains available for a non-standard executable path.
 
-Orchestration is off by default because the single Pi loop completed the tested build without it. Set `orchestration: true` only when you explicitly want one additional scout, worker, or reviewer. The parent may delegate once per task; the child is sequential, isolated from the parent's conversation, capped by `orchestrationMaxRequests`, and its usage is included in the local receipt. There is no fan-out, background coordinator, shared server, or cmux/wmux dependency. cmux and wmux only display the parent Pi terminal.
+Orchestration must remain off during a scored run because the event rules prohibit delegation to other AIs. The retained switch is for non-scored harness development only. There is no background coordinator, shared server, or cmux/wmux dependency.
 
-Environment variables (`PI_WORKSPACE`, `HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_ORCHESTRATION`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, `PI_MAX_SESSION_REQUESTS`, `PI_RESERVE_FINAL_REQUEST`, `PI_CONTEXT_WARN_TOKENS`, `PI_MAX_CONTEXT_TOKENS`, `PI_MAX_BASH_OUTPUT_CHARS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
+Environment variables (`PI_WORKSPACE`, `HACKATHON_BASE_URL`, `HACKATHON_MODEL`, `HACKATHON_API_KEY`, `HACKATHON_IDENTITY_ID`, `PI_HONEY_SKILL`, `PI_BROWSER`, `PI_ORCHESTRATION`, `PI_VERIFY_CMD`, `PI_MAX_TURNS`, `PI_MAX_SESSION_REQUESTS`, `PI_RESERVE_FINAL_REQUEST`, `PI_CONTEXT_WARN_TOKENS`, `PI_MAX_CONTEXT_TOKENS`, `PI_MAX_BASH_OUTPUT_CHARS`, and `PI_MAX_OUTPUT_TOKENS`) still override matching settings for temporary runs.
 
 ## How to work with the harness
 
