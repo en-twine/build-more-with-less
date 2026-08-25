@@ -29,6 +29,9 @@ const orchestrationEnabled = process.env.PI_ORCHESTRATION === undefined
 const orchestrationMaxRequests = Number(config.orchestrationMaxRequests ?? 3);
 const compression = process.env.PI_HONEY_SKILL === "1" ? "skill" : config.compression;
 const honeySkillEnabled = compression === "skill";
+const lcaSkillEnabled = process.env.PI_LCA_SKILL === undefined
+  ? config.lcaSkill !== false
+  : process.env.PI_LCA_SKILL === "1";
 const baseUrl = process.env.HACKATHON_BASE_URL || config.baseUrl;
 const model = process.env.HACKATHON_MODEL || config.model;
 const apiKeyEnv = terminalApiKeyOverride ? "HACKATHON_API_KEY" : config.apiKeyEnv;
@@ -113,10 +116,13 @@ const args = [
   "--thinking", "off",
   "--approve",
   "--skill", path.join(root, ".pi/skills/build-more-with-less/SKILL.md"),
-  "--skill", path.join(root, ".pi/skills/lca-challenge/SKILL.md"),
   "--extension", path.join(root, ".pi/extensions/provider.ts"),
   "--extension", path.join(root, ".pi/extensions/budget.ts"),
 ];
+
+if (lcaSkillEnabled) {
+  args.push("--skill", path.join(root, ".pi/skills/lca-challenge/SKILL.md"));
+}
 
 if (config.compressToolOutput) {
   args.push("--extension", path.join(root, ".pi/extensions/compress.ts"));

@@ -28,6 +28,7 @@ export default {
 
   // Application repository Pi may read and modify. Relative paths start here.
   workspacePath: ".", // e.g. "../hackathon-app" or an absolute path
+  lcaSkill: true,       // false for experiments driven only by copied slice documents
 
   browser: false,        // true only when UI acceptance checks need browser-harness
   orchestration: false,  // must remain false during a scored run
