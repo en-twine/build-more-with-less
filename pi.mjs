@@ -6,6 +6,7 @@ import path from "node:path";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(root, ".env");
+const terminalApiKeyOverride = Boolean(process.env.HACKATHON_API_KEY);
 if (existsSync(envPath)) {
   if (typeof process.loadEnvFile !== "function") {
     console.error("Automatic .env loading requires a current Node.js version. Update Node.js or export the API key before starting Pi.");
@@ -30,7 +31,8 @@ const compression = process.env.PI_HONEY_SKILL === "1" ? "skill" : config.compre
 const honeySkillEnabled = compression === "skill";
 const baseUrl = process.env.HACKATHON_BASE_URL || config.baseUrl;
 const model = process.env.HACKATHON_MODEL || config.model;
-const apiKeyEnv = process.env.HACKATHON_API_KEY ? "HACKATHON_API_KEY" : config.apiKeyEnv;
+const apiKeyEnv = terminalApiKeyOverride ? "HACKATHON_API_KEY" : config.apiKeyEnv;
+const identityId = (process.env.HACKATHON_IDENTITY_ID || config.identityId || "").trim();
 const verifyCommand = process.env.PI_VERIFY_CMD ?? config.verifyCommand;
 const maxRequests = process.env.PI_MAX_TURNS ?? config.maxRequests;
 const maxSessionRequests = process.env.PI_MAX_SESSION_REQUESTS ?? config.maxSessionRequests;
@@ -54,6 +56,14 @@ if (honeySkillEnabled && compressedModel) {
 }
 if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(apiKeyEnv)) {
   console.error(`Invalid API-key environment variable name: ${apiKeyEnv}`);
+  process.exit(2);
+}
+if (!process.env[apiKeyEnv]?.trim()) {
+  console.error(`Missing selected API key: ${apiKeyEnv}`);
+  process.exit(2);
+}
+if (baseUrl.includes("my.orq.ai") && (!/^team-[A-Za-z0-9]+-run-[A-Za-z0-9]+$/.test(identityId) || identityId.includes("team-X-"))) {
+  console.error(`Set a real Orq identityId such as team-3-run-1: ${identityId || "missing"}`);
   process.exit(2);
 }
 if (!Number.isInteger(Number(maxRequests)) || Number(maxRequests) < 0) {
@@ -103,6 +113,7 @@ const args = [
   "--thinking", "off",
   "--approve",
   "--skill", path.join(root, ".pi/skills/build-more-with-less/SKILL.md"),
+  "--skill", path.join(root, ".pi/skills/lca-challenge/SKILL.md"),
   "--extension", path.join(root, ".pi/extensions/provider.ts"),
   "--extension", path.join(root, ".pi/extensions/budget.ts"),
 ];
@@ -134,6 +145,7 @@ const childEnv = {
   PI_RUNTIME_BASE_URL: baseUrl,
   PI_RUNTIME_MODEL: model,
   PI_RUNTIME_API_KEY_ENV: apiKeyEnv,
+  PI_RUNTIME_IDENTITY_ID: identityId,
   PI_RUNTIME_MAX_TOKENS: String(maxOutputTokens),
   PI_MAX_TURNS: String(maxRequests),
   PI_MAX_SESSION_REQUESTS: String(maxSessionRequests),
